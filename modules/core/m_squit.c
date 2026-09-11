@@ -69,6 +69,13 @@ static struct squit_parms *find_squit(struct Client *client_p,
 static void
 mo_squit(struct MsgBuf *msgbuf_p, struct Client *client_p, struct Client *source_p, int parc, const char *parv[])
 {
+	if(!IsOperRemote(source_p))
+	{
+		sendto_one(source_p, form_str(ERR_NOPRIVS),
+			   me.name, source_p->name, "routing");
+		return;
+	}
+
 	struct squit_parms *found_squit;
 	const char *comment = (parc > 2 && parv[2]) ? parv[2] : client_p->name;
 
@@ -83,12 +90,6 @@ mo_squit(struct MsgBuf *msgbuf_p, struct Client *client_p, struct Client *source
 			ilog(L_SERVER, "Received SQUIT %s from %s (%s)",
 			     found_squit->target_p->name, log_client_name(source_p, HIDE_IP),
 			     comment);
-		}
-		else if(!IsOperRemote(source_p))
-		{
-			sendto_one(source_p, form_str(ERR_NOPRIVS),
-				   me.name, source_p->name, "remote");
-			return;
 		}
 
 		exit_client(client_p, found_squit->target_p, source_p, comment);

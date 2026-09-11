@@ -66,19 +66,17 @@ DECLARE_MODULE_AV2(connect, NULL, NULL, connect_clist, NULL, NULL, NULL, NULL, c
 static void
 mo_connect(struct MsgBuf *msgbuf_p, struct Client *client_p, struct Client *source_p, int parc, const char *parv[])
 {
+	if(!IsOperRemote(source_p))
+	{
+		sendto_one(source_p, form_str(ERR_NOPRIVS),
+			   me.name, source_p->name, "routing");
+		return;
+	}
+
 	int port;
 	int tmpport;
 	struct server_conf *server_p;
 	struct Client *target_p;
-
-	/* always privileged with handlers */
-
-	if(MyConnect(source_p) && !IsOperRemote(source_p) && parc > 3)
-	{
-		sendto_one(source_p, form_str(ERR_NOPRIVS),
-			   me.name, source_p->name, "remote");
-		return;
-	}
 
 	if(hunt_server(client_p, source_p, ":%s CONNECT %s %s :%s", 3, parc, parv) != HUNTED_ISME)
 		return;
